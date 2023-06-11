@@ -1,36 +1,37 @@
-'use client'
+"use client";
 
-import { Controller, useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { handleRegisterFormAction } from './RegisterAction'
-import { z } from 'zod'
-import { useState } from 'react'
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { handleRegisterFormAction } from "./RegisterAction";
+import { z } from "zod";
+import { useState } from "react";
 
 export const FormDataSchema = z.object({
   name: z.string().nonempty(),
-  email: z.string().email({ message: 'Invalid email format' }),
-  observation: z.string().optional(),
-})
+  email: z.string().email({ message: "Invalid email format" }),
+  remarks: z.string().optional(),
+});
 
-export type FormDataType = z.infer<typeof FormDataSchema>
+export type FormDataType = z.infer<typeof FormDataSchema>;
 
 export function RegisterForm() {
-  const [userList, setUserList] = useState<FormDataType[]>([])
+  const [userList, setUserList] = useState<FormDataType[]>([]);
   const { control, handleSubmit } = useForm<FormDataType>({
     resolver: zodResolver(FormDataSchema),
-  })
+  });
 
-  const onSubmit = handleSubmit(async (data) => {
-    console.log(data)
+  const onSubmit = handleSubmit(async (data, e) => {
+    e?.preventDefault();
 
-    const { status, data: user, message } = await handleRegisterFormAction(data)
+    // console.log(data);
+    const { data: user, message } = await handleRegisterFormAction(data);
 
-    if (status === 'success') {
-      setUserList([...userList, user])
+    if (user) {
+      setUserList([...userList, user]);
     } else {
-      alert(message)
+      alert(message);
     }
-  })
+  });
 
   return (
     <>
@@ -48,7 +49,7 @@ export function RegisterForm() {
                     htmlFor="name"
                     className="block text-sm font-medium leading-6 text-gray-900"
                   >
-                    Name
+                    Name*
                   </label>
                   <div className="mt-2">
                     <Controller
@@ -58,8 +59,9 @@ export function RegisterForm() {
                         <>
                           <input
                             {...field}
+                            type="text"
                             autoComplete="given-name"
-                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                            className="block w-full rounded-md border-0 py-1.5 pl-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                           />
                           <p className="mt-2 text-sm text-red-600">
                             {fieldState.error?.message}
@@ -74,7 +76,7 @@ export function RegisterForm() {
                     htmlFor="email"
                     className="block text-sm font-medium leading-6 text-gray-900"
                   >
-                    Email address
+                    Email address*
                   </label>
                   <div className="mt-2">
                     <Controller
@@ -106,14 +108,14 @@ export function RegisterForm() {
                   <div className="mt-2">
                     <Controller
                       control={control}
-                      name="observation"
+                      name="remarks"
                       render={({ field, fieldState }) => (
                         <>
                           <textarea
                             {...field}
                             rows={3}
                             className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                            defaultValue={''}
+                            defaultValue={""}
                           />
                           <p className="mt-2 text-sm text-red-600">
                             {fieldState.error?.message}
@@ -160,7 +162,7 @@ export function RegisterForm() {
                     {user.email}
                   </p>
                   <p className="text-sm leading-6 text-gray-500">
-                    {user.observation}
+                    {user.remarks}
                   </p>
                 </li>
               ))
@@ -173,5 +175,5 @@ export function RegisterForm() {
         </div>
       </div>
     </>
-  )
+  );
 }
