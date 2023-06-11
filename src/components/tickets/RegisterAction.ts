@@ -1,56 +1,57 @@
 "use server";
 
+import { FormDataType } from "@/dtos/ticket.dto";
 import { prisma } from "@/lib/prisma";
-
-type FormDataType = {
-  email: string;
-  name: string;
-  remarks?: string | undefined;
-};
+import { TicketType } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 
 export const handleRegisterFormAction = async (data: FormDataType) => {
   console.log("RegisterAction", data);
 
   try {
-    // Save to database using Prisma client
-    // It should create a new ticket in the database and associate it with a user
-    // If the user already exists, it should associate the ticket with the existing user
-    // If the user does not exist, it should create a new user and associate the ticket with the new user
+    // Starts a transaction
+    const result = await prisma.$transaction(async (prisma) => {
+      // Upserts a user
+      const user = await prisma.user.upsert({
+        where: { email: data.email },
+        update: { name: data.name }, // updates the name if user exists
+        create: { email: data.email, name: data.name }, // creates user if not exists
+      });
 
-    // const user = await prisma.user.upsert({
-    //   where: { email: data.email },
-    //   update: {},
-    //   create: {
-    //     email: data.email,
-    //     name: data.name,
-    //   },
-    // });
+      // Creates a ticket and associates it with the user
+      const ticket = await prisma.ticket.create({
+        data: {
+          type: TicketType.SINGLE,
+          remarks: data.remarks,
+          isValid: true, // or false, depends on your business logic
+          expiresAt: new Date(), // put the correct date here
+          customerId: user.id,
+        },
+      });
 
-    // const ticket = await prisma.ticket.create({
-    //   data: {
-    //     remarks: data.remarks,
-    //     user: {
-    //       connect: {
-    //         id: user.id,
-    //       },
-    //     },
-    //   },
-    // });
+      return { user, ticket };
+    });
 
-    // console.log("ticket", ticket);
+    console.log("result", result);
 
-    return {
-      success: true,
-      message: "Ticket created successfully",
-      data: {
-        status: "success",
-        email: data.email,
-        name: data.name,
-        remarks: data.remarks,
-      },
-    };
+    revalidatePath("/");
+    return result;
   } catch (error) {
     console.log("error", error);
     throw new Error("Error creating ticket");
+  }
+};
+
+export const deleteTicket = async (id: string) => {
+  try {
+    const result = await prisma.ticket.delete({
+      where: { id },
+    });
+    console.log("result", result);
+    revalidatePath("/");
+    return result;
+  } catch (error) {
+    console.log("error", error);
+    throw new Error("Error deleting ticket");
   }
 };
