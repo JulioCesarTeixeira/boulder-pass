@@ -1,11 +1,10 @@
 "use server";
 
-import { FormDataType } from "@/dtos/ticket.dto";
 import { prisma } from "@/lib/prisma";
 import { TicketType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
-export const handleRegisterFormAction = async (data: FormDataType) => {
+export const handleRegisterFormAction = async (data: any) => {
   console.log("RegisterAction", data);
 
   try {
