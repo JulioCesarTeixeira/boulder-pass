@@ -54,3 +54,19 @@ export const deleteTicket = async (id: string) => {
     throw new Error("Error deleting ticket");
   }
 };
+
+// Create update ticket action
+export const updateTicket = async (id: string, data: any) => {
+  try {
+    const result = await prisma.ticket.update({
+      where: { id },
+      data,
+    });
+    console.log("result", result);
+    revalidatePath("/");
+    return result;
+  } catch (error) {
+    console.log("error", error);
+    throw new Error("Error updating ticket");
+  }
+};
